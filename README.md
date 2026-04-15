@@ -1,47 +1,47 @@
 # Web to Figma
 
-Narzędzie do przechwytywania struktury strony WWW i importowania jej do Figmy jako warstwy (`FRAME`, `TEXT`, `SVG`, `IMAGE`).
+Web to Figma captures a web page structure and imports it into Figma as layers (`FRAME`, `TEXT`, `SVG`, `IMAGE`).
 
-Repo zawiera dwa elementy:
+This repository has two main parts:
 
-- `extension/` - rozszerzenie Chrome, które zbiera dane o stronie i kopiuje JSON do schowka.
-- `plugin/` - plugin Figma importujący JSON do aktywnego dokumentu.
+- `extension/` - a Chrome extension that captures page data and copies JSON to the clipboard.
+- `plugin/` - a Figma plugin that imports JSON into the active document.
 
-## Funkcje
+## Features
 
-- Przechwytywanie układu i podstawowych stylow elementow DOM.
-- Obsluga tekstu, SVG i obrazow.
-- Opcjonalne przewijanie strony pod lazy-loaded content.
-- Kontrola viewportu w rozszerzeniu.
-- Import przechwyconego JSON bezposrednio w Figma pluginie.
+- Capture layout and core visual styles from DOM elements.
+- Handle text, SVG, and image nodes.
+- Optional full-page scroll to include lazy-loaded content.
+- Viewport control in the extension popup.
+- Direct JSON import in the Figma plugin.
 
-## Wymagania
+## Requirements
 
-- Google Chrome (dla rozszerzenia)
-- Konto Figma (dla pluginu)
+- Google Chrome (for the extension)
+- Figma account (for the plugin)
 
-## Szybki start
+## Quick Start
 
-### 1) Rozszerzenie Chrome
+### 1) Chrome extension
 
-1. Otworz `chrome://extensions`.
-2. Wlacz **Developer mode**.
-3. Kliknij **Load unpacked** i wskaz katalog `extension/`.
+1. Open `chrome://extensions`.
+2. Enable **Developer mode**.
+3. Click **Load unpacked** and select the `extension/` directory.
 
-### 2) Plugin Figma
+### 2) Figma plugin
 
-1. W Figma: **Plugins -> Development -> Import plugin from manifest...**
-2. Wybierz plik `plugin/manifest.json`.
+1. In Figma: **Plugins -> Development -> Import plugin from manifest...**
+2. Select `plugin/manifest.json`.
 
-## Uzycie
+## Usage
 
-1. Otworz strone w Chrome.
-2. Uruchom rozszerzenie **Web to Figma**.
-3. Kliknij capture (JSON zostanie skopiowany do schowka).
-4. W Figma uruchom plugin **Web to Figma Import**.
-5. Wklej JSON i kliknij **Importuj**.
+1. Open any page in Chrome.
+2. Run the **Web to Figma** extension.
+3. Capture the page (JSON is copied to clipboard).
+4. Run **Web to Figma Import** in Figma.
+5. Paste JSON and click **Import**.
 
-## Struktura projektu
+## Project structure
 
 ```text
 web-to-figma/
@@ -49,6 +49,6 @@ web-to-figma/
   plugin/
 ```
 
-## Licencja
+## License
 
-Projekt jest udostepniony na licencji MIT. Zobacz `LICENSE`.
+This project is licensed under MIT. See `LICENSE`.

@@ -1,5 +1,9 @@
 figma.showUI(__html__, { width: 400, height: 500 });
 
+function getNumber(value, fallback) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
 figma.ui.onmessage = async function(msg) {
   if (msg.type === 'import') {
     try {
@@ -168,7 +172,7 @@ async function createNode(d, parentHasAutoLayout) {
         // Fallback: create rectangle placeholder
         n = figma.createRectangle();
         n.name = d.name || 'icon';
-        n.resize(d.width || 24, d.height || 24);
+        n.resize(getNumber(d.width, 24), getNumber(d.height, 24));
         if (useZeroPosition) { n.x = 0; n.y = 0; } else { n.x = d.x || 0; n.y = d.y || 0; }
         n.fills = [{ type: 'SOLID', color: { r: 0.8, g: 0.8, b: 0.8 } }];
       }
@@ -176,7 +180,7 @@ async function createNode(d, parentHasAutoLayout) {
       // SVG parse failed, create placeholder
       n = figma.createRectangle();
       n.name = (d.name || 'icon') + ' (SVG error)';
-      n.resize(d.width || 24, d.height || 24);
+      n.resize(getNumber(d.width, 24), getNumber(d.height, 24));
       if (useZeroPosition) { n.x = 0; n.y = 0; } else { n.x = d.x || 0; n.y = d.y || 0; }
       n.fills = [{ type: 'SOLID', color: { r: 0.9, g: 0.7, b: 0.7 } }];
     }
@@ -185,7 +189,7 @@ async function createNode(d, parentHasAutoLayout) {
     // Create placeholder for images
     n = figma.createRectangle();
     n.name = d.name || 'image';
-    n.resize(d.width || 100, d.height || 100);
+    n.resize(getNumber(d.width, 100), getNumber(d.height, 100));
     if (useZeroPosition) { n.x = 0; n.y = 0; } else { n.x = d.x || 0; n.y = d.y || 0; }
     n.fills = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.95 } }];
     n.cornerRadius = 4;
@@ -194,7 +198,7 @@ async function createNode(d, parentHasAutoLayout) {
     // FRAME
     n = figma.createFrame();
     n.name = d.name || 'Frame';
-    n.resize(d.width || 100, d.height || 100);
+    n.resize(getNumber(d.width, 100), getNumber(d.height, 100));
     if (useZeroPosition) {
       n.x = 0;
       n.y = 0;

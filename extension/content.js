@@ -9,6 +9,7 @@
  */
 
 const SKIP_TAGS = new Set(["script", "style", "noscript", "template", "head", "meta", "link", "iframe"]);
+const CONTENT_SCRIPT_VERSION = "7";
 
 function parseColor(val) {
   if (!val || val === 'transparent' || val === 'rgba(0, 0, 0, 0)') return null;
@@ -238,6 +239,34 @@ function captureImage(el, parentRect) {
     src: el.src || '',
     cornerRadius: Math.round(parseFloat(cs.borderRadius) || 0)
   };
+}
+
+function canFlattenNeutralWrapper(tag, cs, frame, child) {
+  void cs;
+  const flattenTags = new Set(['div', 'section', 'ol', 'ul']);
+  if (!flattenTags.has(tag)) return false;
+  if (!child) return false;
+  if (frame.autoLayout) return false;
+  if (frame.fills && frame.fills.length) return false;
+  if (frame.strokes && frame.strokes.length) return false;
+  if ((frame.cornerRadius || 0) !== 0) return false;
+  return true;
+}
+
+function shouldDropEmptyWrapper(tag, frame, children, directTextContent) {
+  if (directTextContent) return false;
+  if (children.length > 0) return false;
+  if (frame.fills && frame.fills.length) return false;
+  if (frame.strokes && frame.strokes.length) return false;
+  if ((frame.cornerRadius || 0) !== 0) return false;
+
+  // Common empty structural containers from app shells/overlays.
+  if (tag === 'ol' || tag === 'ul' || tag === 'section') return true;
+
+  // Zero-sized wrappers should not create layers in Figma.
+  if ((frame.width || 0) <= 1 || (frame.height || 0) <= 1) return true;
+
+  return false;
 }
 
 function captureElement(el, parentRect, depth) {
@@ -520,6 +549,19 @@ function captureElement(el, parentRect, depth) {
   if (!Number.isNaN(flexGrow) && flexGrow > 0) {
     frame.layoutGrow = Math.min(1, flexGrow);
   }
+
+  if (shouldDropEmptyWrapper(tag, frame, children, directTextContent)) {
+    return null;
+  }
+
+  // Conservative flattening of purely structural wrappers to avoid
+  // unnecessary extra layers in Figma (e.g. div/section that only wrap one full-size child).
+  if (children.length === 1 && canFlattenNeutralWrapper(tag, cs, frame, children[0])) {
+    const onlyChild = children[0];
+    onlyChild.x = Math.round((frame.x || 0) + (onlyChild.x || 0));
+    onlyChild.y = Math.round((frame.y || 0) + (onlyChild.y || 0));
+    return onlyChild;
+  }
   
   return frame;
 }
@@ -535,19 +577,50 @@ function captureFullPage() {
     const captured = captureElement(child, null, 0);
     if (captured) children.push(captured);
   }
+
+  let contentMaxX = 0;
+  let contentMaxY = 0;
+  for (const child of children) {
+    const right = (child.x || 0) + (child.width || 0);
+    const bottom = (child.y || 0) + (child.height || 0);
+    if (right > contentMaxX) contentMaxX = right;
+    if (bottom > contentMaxY) contentMaxY = bottom;
+  }
   
   // Get page background
   const bodyCs = getComputedStyle(body);
   const htmlCs = getComputedStyle(document.documentElement);
   const pageBg = parseColor(bodyCs.backgroundColor) || parseColor(htmlCs.backgroundColor) || { r: 1, g: 1, b: 1, a: 1 };
+
+  const viewportWidth = document.documentElement.clientWidth;
+  const viewportHeight = document.documentElement.clientHeight;
+
+  // Prefer the main app wrapper as root when it clearly represents the page canvas.
+  // This avoids an extra outer frame (e.g. "Lovable App") that can be wider than real content.
+  let primaryRoot = null;
+  for (const child of children) {
+    if (!child || child.type !== 'FRAME') continue;
+    if ((child.x || 0) !== 0 || (child.y || 0) !== 0) continue;
+    if (child.name !== 'div') continue;
+    const w = child.width || 0;
+    const h = child.height || 0;
+    if (w < viewportWidth * 0.8 || h < viewportHeight * 0.8) continue;
+    if (!primaryRoot || w * h > (primaryRoot.width || 0) * (primaryRoot.height || 0)) {
+      primaryRoot = child;
+    }
+  }
+
+  if (primaryRoot) {
+    return primaryRoot;
+  }
   
   return {
     type: 'FRAME',
     name: document.title || 'Page',
     x: 0,
     y: 0,
-    width: Math.max(Math.round(bodyRect.width), window.innerWidth),
-    height: Math.max(document.documentElement.scrollHeight, window.innerHeight),
+    width: Math.max(Math.round(contentMaxX), viewportWidth),
+    height: Math.max(Math.round(contentMaxY), viewportHeight),
     fills: [{ type: 'SOLID', color: pageBg }],
     cornerRadius: 0,
     children
@@ -571,7 +644,7 @@ async function scrollPage() {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.action === 'ping') {
-    sendResponse({ ok: true, width: window.innerWidth });
+    sendResponse({ ok: true, width: window.innerWidth, version: CONTENT_SCRIPT_VERSION });
     return true;
   }
   
@@ -599,4 +672,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-console.log("[Web to Figma] Content script v6 loaded");
+console.log("[Web to Figma] Content script v7 loaded");

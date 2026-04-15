@@ -1,4 +1,5 @@
 // popup.js — Web to Figma v4
+var EXPECTED_CONTENT_SCRIPT_VERSION = '7';
 
 function setStatus(msg, type) {
   var el = document.getElementById('status');
@@ -16,7 +17,7 @@ async function getActiveTab() {
 async function ensureContentScript(tabId) {
   try {
     var res = await chrome.tabs.sendMessage(tabId, { action: 'ping' });
-    if (res && res.ok) return res;
+    if (res && res.ok && res.version === EXPECTED_CONTENT_SCRIPT_VERSION) return res;
   } catch (e) {}
   
   await chrome.scripting.executeScript({
@@ -27,9 +28,12 @@ async function ensureContentScript(tabId) {
   
   try {
     var res = await chrome.tabs.sendMessage(tabId, { action: 'ping' });
-    return res;
+    if (res && res.ok && res.version === EXPECTED_CONTENT_SCRIPT_VERSION) {
+      return res;
+    }
+    throw new Error('Content script version mismatch');
   } catch (e) {
-    return { ok: true };
+    throw new Error('Nie udalo sie zaladowac aktualnego content scriptu. Odswiez karte i sproboj ponownie.');
   }
 }
 
