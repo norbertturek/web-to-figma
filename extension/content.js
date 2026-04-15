@@ -364,8 +364,12 @@ function captureElement(el, parentRect, depth) {
     });
   }
   
+  const shouldKeepTextOnlyElementAsFrame =
+    tag === 'button' ||
+    ((bgColor && bgColor.a > 0.01) || borderWidth > 0 || borderRadius > 0);
+
   // Pure text node (no child elements)
-  if (directTextContent && !hasChildElements) {
+  if (directTextContent && !hasChildElements && !shouldKeepTextOnlyElementAsFrame) {
     return {
       type: 'TEXT',
       name: directTextContent.slice(0, 30),
@@ -382,6 +386,25 @@ function captureElement(el, parentRect, depth) {
       letterSpacing,
       fills: [{ type: 'SOLID', color: textColor || { r: 0, g: 0, b: 0, a: 1 } }]
     };
+  }
+
+  if (directTextContent && !hasChildElements && shouldKeepTextOnlyElementAsFrame) {
+    children.push({
+      type: 'TEXT',
+      name: directTextContent.slice(0, 30),
+      x: 0,
+      y: 0,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      characters: directTextContent,
+      fontSize: Math.round(fontSize),
+      fontFamily,
+      fontWeight,
+      textAlign,
+      lineHeight: Math.round(lineHeight),
+      letterSpacing,
+      fills: [{ type: 'SOLID', color: textColor || { r: 0, g: 0, b: 0, a: 1 } }]
+    });
   }
   
   // Frame
