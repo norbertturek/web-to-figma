@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui; font-size: 12px; padding: 16px; }
+    h1 { font-size: 14px; margin-bottom: 12px; }
+    textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 11px; margin-bottom: 8px; }
+    .hint { font-size: 11px; color: #888; margin-bottom: 12px; }
+    .btns { display: flex; gap: 8px; }
+    button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .primary { background: #3b82f6; color: #fff; }
+    .secondary { background: #eee; }
+    #status { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 11px; display: none; }
+    #status.ok { display: block; background: #dcfce7; color: #166534; }
+    #status.err { display: block; background: #fee2e2; color: #991b1b; }
+    .ex { margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; }
+    .ex button { width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>Web to Figma Import</h1>
+  <textarea id="json" placeholder='{"type":"FRAME",...}'></textarea>
+  <p class="hint">Wklej JSON z rozszerzenia Chrome</p>
+  <div class="btns">
+    <button class="primary" id="imp">Importuj</button>
+    <button class="secondary" id="close">Zamknij</button>
+  </div>
+  <div id="status"></div>
+  <div class="ex"><button class="secondary" id="demo">Zaladuj przyklad</button></div>
+  <script>
+    const ta = document.getElementById('json'), st = document.getElementById('status');
+    document.getElementById('imp').onclick = () => {
+      try {
+        let d = JSON.parse(ta.value.trim());
+        if (d.figmaTree) d = d.figmaTree;
+        parent.postMessage({ pluginMessage: { type: 'import', data: d } }, '*');
+      } catch (e) { st.textContent = 'Blad JSON: ' + e.message; st.className = 'err'; }
+    };
+    document.getElementById('close').onclick = () => parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+    document.getElementById('demo').onclick = () => {
+      ta.value = JSON.stringify({
+        type: "FRAME", name: "Card", width: 300, height: 150, fills: [{ type: "SOLID", color: { r: 1, g: 1, b: 1, a: 1 } }], cornerRadius: 12,
+        children: [
+          { type: "TEXT", name: "Title", characters: "Hello Figma!", fontSize: 20, fontWeight: "Bold", x: 16, y: 16, width: 200, height: 24, fills: [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2, a: 1 } }] },
+          { type: "FRAME", name: "Button", width: 80, height: 32, x: 16, y: 100, fills: [{ type: "SOLID", color: { r: 0.23, g: 0.51, b: 0.96, a: 1 } }], cornerRadius: 6, children: [
+            { type: "TEXT", characters: "Click", fontSize: 12, fontWeight: "Medium", x: 20, y: 8, width: 40, height: 16, fills: [{ type: "SOLID", color: { r: 1, g: 1, b: 1, a: 1 } }] }
+          ]}
+        ]
+      }, null, 2);
+      st.textContent = 'Przyklad zaladowany'; st.className = 'ok';
+    };
+    window.onmessage = e => {
+      const m = e.data.pluginMessage;
+      if (m?.type === 'success') { st.textContent = 'Zaimportowano!'; st.className = 'ok'; }
+      if (m?.type === 'error') { st.textContent = 'Blad: ' + m.message; st.className = 'err'; }
+    };
+  </script>
+</body>
+</html>

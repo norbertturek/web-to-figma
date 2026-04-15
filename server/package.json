@@ -1,0 +1,18 @@
+{
+  "name": "web-to-figma-server",
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dom-to-svg": "^0.12.2",
+    "express": "^4.21.0",
+    "fig-kiwi": "^0.0.1",
+    "jsdom": "^24.1.0",
+    "kiwi-schema": "^0.5.0",
+    "puppeteer": "^24.40.0"
+  }
+}

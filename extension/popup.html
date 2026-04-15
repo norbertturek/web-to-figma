@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="popup.css" />
+  <title>Web to Figma</title>
+</head>
+<body>
+  <h1>Web to Figma</h1>
+  
+  <section class="section">
+    <label for="viewport">Viewport</label>
+    <select id="viewport">
+      <option value="auto">Auto (obecna szerokość)</option>
+      <option value="1920">Desktop XL (1920px)</option>
+      <option value="1440">Desktop (1440px)</option>
+      <option value="1280">Laptop (1280px)</option>
+      <option value="1024">Tablet landscape (1024px)</option>
+      <option value="768">Tablet (768px)</option>
+      <option value="430">Mobile L (430px)</option>
+      <option value="375">Mobile M (375px)</option>
+      <option value="320">Mobile S (320px)</option>
+    </select>
+  </section>
+  
+  <section class="section">
+    <label>
+      <input type="checkbox" id="scrollPage" checked />
+      Przewiń stronę (lazy content)
+    </label>
+  </section>
+  
+  <button type="button" id="copy" autofocus>Kopiuj dla Figmy</button>
+  
+  <p id="status" class="status"></p>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
